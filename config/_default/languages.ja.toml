@@ -1,0 +1,22 @@
+languageCode = "ja"
+languageName = "Japanese"
+isoCode = "ja"
+weight = 10
+rtl = false
+
+title = "ほたてログ"
+logo = "img/avatar.png"
+description = "My awesome website"
+copyright = "Hotategai"
+
+dateFormat = "2006/01/02"
+
+[author]
+  name = "ほたてがい"
+  image = "img/avatar.jpg"
+  headline = "海外移住を目指しているエンジニアです。"
+  links = [
+    { twitter = "https://twitter.com/Hotate625" },
+    { instagram = "https://www.instagram.com/hotate1023/" },
+    { github = "https://github.com/hotate625" }
+  ]
