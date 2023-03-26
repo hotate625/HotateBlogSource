@@ -1,0 +1,66 @@
+# This is a basic workflow to help you get started with Actions
+
+name: BuildAndDeploy
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" , "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch: 
+
+permissions:
+  contents: read
+
+env: 
+  AWS_REGION: ap-northeast-1
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Install Hugo CLI
+        env:
+          HUGO_VERSION: 0.109.0
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: ${{env.AWS_REGION}}
+
+      - name: Build
+        run: |
+          hugo
+
+      - name: DeployToS3Dev
+        if: github.ref == 'refs/heads/develop'
+        env:
+          BUCKET_NAME_DEV: ${{secrets.BUCKET_NAME_DEV}}
+        run:
+          aws s3 sync --delete --region ${{env.AWS_REGION}} ./public s3://${{env.BUCKET_NAME_DEV}}
+          
+      - name: DeployToS3Release
+        if: github.ref == 'refs/heads/main'
+        env:
+          BUCKET_NAME_RELEASE: ${{secrets.BUCKET_NAME_DEV}}
+        run:
+          aws s3 sync --delete --region ${{env.AWS_REGION}} ./public s3://hotatelog-release-${{env.BUCKET_NAME_RELEASE}}
